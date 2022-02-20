@@ -10,3 +10,4 @@ Use P2.5 led screen display
 ### 8、后续持续加入多种界面。
 ### 9、提供源码，供有开发环境的朋友使用。bin文件可直接刷入使用
 ### 10、天气部分使用和风天气。key和城市id请访问https://id.qweather.com/获取。
+### 11、DAOLEDCLOCK-BETA.ino.esp32.bin增加三天预报和老虎切换。
