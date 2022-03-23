@@ -137,7 +137,7 @@ void connectToWiFi(int timeOut_s){
         Serial.print(".");
         delay(500);
         Connect_time ++;
-        if (Connect_time > 2*timeOut_s) {  //长时间连接不上，重新进入配网页面
+        if (Connect_time > 4*timeOut_s) {  //长时间连接不上，重新进入配网页面
           Serial.println("");
           Serial.println("WIFI autoconnect fail, start AP for webconfig now...");
           wifiConfig();   //转到网页端手动配置wifi
