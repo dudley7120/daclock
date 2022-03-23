@@ -7,7 +7,7 @@ char * showWeek(int v_week) { //显示日期
       color3 = 0xf000;//农历
       color4 = 0xfff0;//温度
       color5 = TFT_ORANGE;
-      yy1 = 52; yy2 = -14; yy3 = -14;
+      yy1 = 53; yy2 = -14; yy3 = -14;
       return "一";
       break;
     case 2:
@@ -16,7 +16,7 @@ char * showWeek(int v_week) { //显示日期
       color3 = 0xf000;//农历
       color4 = 0xfff0;//温度
       color5 = TFT_ORANGE;
-      yy1 = 0; yy2 = 0; yy3 = 0;
+      yy1 = 2; yy2 = 0; yy3 = 0;
       return "二";
       break;
     case 3:
@@ -25,7 +25,7 @@ char * showWeek(int v_week) { //显示日期
       color3 = 0xf000;//农历
       color4 = 0xfff0;//温度
       color5 = TFT_ORANGE;
-      yy1 = 52; yy2 = -40; yy3 = 8;
+      yy1 = 52; yy2 = -42; yy3 = 8;
       return "三";
       break;
     case 4:
@@ -43,16 +43,16 @@ char * showWeek(int v_week) { //显示日期
       color3 = 0xf000;//农历
       color4 = 0xfff0;//温度
       color5 = TFT_ORANGE;
-      yy1 = 0; yy2 = 0; yy3 = 0;
+      yy1 = 2; yy2 = 0; yy3 = 0;
       return "五";
       break;
     case 6:
-      color = 0x1f; //时间
+      color = TFT_SKYBLUE; //时间
       color2 = TFT_ORANGE; //日期
       color3 = 0xf000;//农历
       color4 = 0xfff0;//温度
       color5 = TFT_ORANGE;
-      yy1 = 52; yy2 = -40; yy3 = 8;
+      yy1 = 52; yy2 = -42; yy3 = 8;
       return "六";
       break;
     case 15:
@@ -66,137 +66,233 @@ char * showWeek(int v_week) { //显示日期
       break;
   }
 }
+void nightMode() {
+  color = 0x8800; //时间
+  color2 = 0x8800; //日期
+  color3 = 0x8800;//农历
+  color4 = 0x8800;//温度
+  color5 = 0x8800;
+  isnight = true;
+}
 void refreshData(void * parameter) {
   //每天0点更新网络时间
-   while(!WiFi.status() == WL_CONNECTED){
-    autoConfig();
-   }
-  if (hou == 0 && minu == 0 && sec == 0) {
+  while (!WiFi.status() == WL_CONNECTED) {
+    connectToWiFi(15);   //apConfig();
+  }
+
+  if ( minu == 0 && sec == 0) {
     setSyncProvider(getNtpTime);
     GetTime();
     year_ = String(year1);
+    month_ = String(month1);
+    day_ = String(day1);
     getNongli( year_, month_, day_);
   }
-  dht11read();
   //
-  month_ = String(month1);
-  day_ = String(day1);
 
-  setBrightness(sensor_Read());
   vTaskDelete(NULL);
 
 }
+void housound(void * parameter) {
+  common_play();
+  vTaskDelete(NULL);
+}
 void refreshTQ(void * parameter) {
-      getWeather();
-    vTaskDelete(NULL);
+  if (WiFi.status() == WL_CONNECTED) {
+    getNongli( year_, month_, day_);
+    getWeather();
+  } else {
+    autoConfig();
+  }
+  vTaskDelete(NULL);
+}
+void showJieri(void * parameter) {
+  if (sec % 20 < 15) {
+    drawHanziS(0+scroll_x, -1 + yy1, jieri.c_str(), color3);
+    if(scroll_x>-60&&jieri.length()>15){
+      scroll_x-=4;
+    }else{
+      scroll_x=0;
+    }
+    //  color3=1;
+  } else {
+    scroll_x=0;
+    displayNumbers2(year1, 21, -2 + yy1, color2);
+    //dma_display->setCursor(27, 3 + yy1);
+    //dma_display->setTextSize(1);
+    //dma_display->print(year1);
+    //dma_display->print(".");
+    drawBit(28, yy1 - 2, dot, 7, 14, color2);
+    if (month1 < 10) {
+      displayNumbers2(0, 32, -2 + yy1, color2);
+    }
+    displayNumbers2(month1, 39, -2 + yy1, color2);
+    //dma_display->setCursor(45, 3 + yy1);
+    //dma_display->print(".");
+    drawBit(46,  yy1 - 2, dot, 7, 14, color2);
+    if (day1 < 10) {
+      displayNumbers2(0, 49, -2 + yy1, color2);
+    }
+    displayNumbers2(day1, 56, -2 + yy1, color2);
+  }
+  vTaskDelete(NULL);
 }
 void showTime() {
-  showWeek(week);
-  GetTime();
-  //更新天气
-   if (minu % 10 == 0 && sec == 0) {
+  const char* v_week = showWeek(week);
+  if (minu == 0 && sec == 0 && soundon && hou < 21 && hou > 7) {
     xTaskCreate(
-    refreshTQ,   /* Task function. */
-    "refreshTQ", /* String with name of task. */
-    10000,     /* Stack size in bytes. */
-    NULL,      /* Parameter passed as input of the task */
-    1,         /* Priority of the task. */
-    NULL);     /* Task handle. */
+      housound,   /* Task function. */
+      "housound", /* String with name of task. */
+      10000,     /* Stack size in bytes. */
+      NULL,      /* Parameter passed as input of the task */
+      1,         /* Priority of the task. */
+      NULL);     /* Task handle. */
   }
+  Serial.print("节日长度：");
+  Serial.println(jieri.length());
   //显示日期
   // displayNumbers2(strlen(jieri),0,0+yy1,color2);
-   //drawHanziS(0, 0 + yy1, strlen(jieri), color2);
-
-  if (strlen(jieri) < 1) {
+  //drawHanziS(0, 0 + yy1, strlen(jieri), color2);
+  //显示节日和日期
+  if (jieri.length() < 1) {
     dma_display->setTextColor(color2);
     displayNumbers2(year1, 21, -2 + yy1, color2);
-    dma_display->setCursor(27, 3 + yy1);
-    dma_display->setTextSize(1);
+    // dma_display->setCursor(27, 3 + yy1);
+    // dma_display->setTextSize(1);
     //dma_display->print(year1);
-    dma_display->print(".");
+    //  dma_display->print(".");
+    // drawBit(29, 3 + yy1, dot, 7, 14, color2);
+    drawBit(28, yy1 - 2, dot, 7, 14, color2);
+    if (month1 < 10) {
+      displayNumbers2(0, 32, -2 + yy1, color2);
+    }
     displayNumbers2(month1, 39, -2 + yy1, color2);
     // dma_display->print(month1);
-    dma_display->setCursor(45, 3 + yy1);
-    dma_display->print(".");
+    //dma_display->setCursor(45, 3 + yy1);
+    //dma_display->print(".");
+    drawBit(46, yy1 - 2, dot, 7, 14, color2);
+    if (day1 < 10) {
+      displayNumbers2(0, 49, -2 + yy1, color2);
+    }
     displayNumbers2(day1, 56, -2 + yy1, color2);
     //显示节日
   } else {
-    if (sec % 10 < 5) {
-      drawHanziS(0, 0 + yy1, jieri, color3);
-    } else {
-      dma_display->setTextColor(color2);
-      displayNumbers2(year1, 21, -2 + yy1, color2);
-      dma_display->setCursor(27, 3 + yy1);
-      dma_display->setTextSize(1);
-      //dma_display->print(year1);
-      dma_display->print(".");
-      displayNumbers2(month1, 39, -2 + yy1, color2);
-      // dma_display->print(month1);
-      dma_display->setCursor(45, 3 + yy1);
-      dma_display->print(".");
-      displayNumbers2(day1, 56, -2 + yy1, color2);
-    }
+
+    xTaskCreate(
+      showJieri,   /* Task function. */
+      "showJieri", /* String with name of task. */
+      10000,     /* Stack size in bytes. */
+      NULL,      /* Parameter passed as input of the task */
+      1,         /* Priority of the task. */
+      NULL);     /* Task handle. */
   }
-  
+
+
   //dma_display->print(day1);
   if (sec % 10 < 3) {
-    drawHanziS(20, 28 + yy3, china_month, color3);
-    drawHanziS(41, 28 + yy3, china_day, color3);
+    drawHanziS(20, 29 + yy3, china_month, color3);
+    drawHanziS(41, 29 + yy3, china_day, color3);
   } else {
     if (strlen(jieqi) < 1) {
-      drawHanziS(22, 28 + yy3, "星期", color3);
-      drawHanziS(46, 28 + yy3, showWeek(week), color3);
+      drawHanziS(22, 29 + yy3, "星期", color3);
+      drawHanziS(46, 29 + yy3, v_week, color3);
     } else {
       if (sec % 10 >= 3 && sec % 10 < 7) {
-        drawHanziS(22, 28 + yy3, "星期", color3);
-        drawHanziS(46, 28 + yy3, showWeek(week), color3);
+        drawHanziS(22, 29 + yy3, "星期", color3);
+        drawHanziS(46, 29 + yy3, v_week, color3);
       } else {
-        drawHanziS(22, 28 + yy3, jieqi, color3);
+        drawHanziS(22, 29 + yy3, jieqi, color3);
       }
     }
   }
   /*显示时间*/
   if (hou  < 10) {
-    displayNumbers(0, 0, 40 + yy2, color);
-    displayNumbers(hou, 12, 40 + yy2, color);
+    displayNumbers(0, 0, 41 + yy2, color);
+    displayNumbers(hou, 12, 41 + yy2, color);
   } else {
-    displayNumbers(hou, 12, 40 + yy2, color);
+    displayNumbers(hou, 12, 41 + yy2, color);
   }
   if (minu < 10) {
-    displayNumbers(0, 36, 40 + yy2, color);
-    displayNumbers(minu, 48, 40 + yy2, color);
+    displayNumbers(0, 36, 41 + yy2, color);
+    displayNumbers(minu, 48, 41 + yy2, color);
   } else {
-    displayNumbers(minu, 48, 40 + yy2, color);
+    displayNumbers(minu, 48, 41 + yy2, color);
+  }
+  disSmallNumbers(sec_ten, 28, 47 + yy2, color);
+  disSmallNumbers(sec_one, 28, 54 + yy2, color);
+  if (caidaion) {
+    drawLine(0, 0, 64, sec_one); //上线
+    drawLine(0, 42 + yy2, 64, sec_one); //分隔线
+    drawHLine(0, 0, 64, sec_one); //左竖线
+    drawLine(0, 63 + yy2, 64, sec_one); //分隔线
+    drawHLine(63, 0, 64, sec_one); //右竖线
+    drawLine(0, 63, 64, sec_one); //下线
   }
 
-
-  disSmallNumbers(sec_ten, 28, 45 + yy2, color);
-  disSmallNumbers(sec_one, 28, 52 + yy2, color);
   //十分钟刷新天气
-  showTQ(wea_code, 0, 16 + yy3);
+  showTQ(wea_code, 0, 17 + yy3);
   //室外
-  drawColorBit(22, 16 + yy3, tianqiwd, 5, 10);
-  drawChars( 28, 21 + yy3,wea_temp1, color4);
-    Serial.print("temp:");
+  drawColorBit(22, 17 + yy3, tianqiwd, 5, 10);
+  drawChars( 28, 22 + yy3, wea_temp1, color4);
+  Serial.print("temp:");
   Serial.println(wea_temp1);
   //显示摄氏度
-  if(atoi(wea_temp1)>-10)
-  drawSmBit(36, 18 + yy3, wd, 3, 8, color4);
+  if (atoi(wea_temp1) > -10)
+    drawSmBit(36, 19 + yy3, wd, 3, 8, color4);
   //室内温度
-  disSmallNumbers(temperature+temp_mod, 32, 15 + yy3, color5);
-  drawSmBit(36, 12 + yy3, wd, 3, 8, color5);
-  drawColorBit(42, 16 + yy3, tianqisd, 5, 10);
-  disSmallNumbers(wea_hm, 52, 21 + yy3, color4);
+  disSmallNumbers(temperature + temp_mod, 32, 16 + yy3, color5);
+  drawSmBit(36, 13 + yy3, wd, 3, 8, color5);
+  drawColorBit(42, 17 + yy3, tianqisd, 5, 10);
+  disSmallNumbers(wea_hm, 52, 22 + yy3, color4);
   //显示H
-  drawSmBit(56, 18 + yy3, sd, 3, 8, color4);
+  drawSmBit(56, 19 + yy3, sd, 3, 8, color4);
   //室内湿度
-  disSmallNumbers(humidity+hum_mod, 52, 15 + yy3, color5);
+  disSmallNumbers(humidity + hum_mod, 52, 16 + yy3, color5);
   //显示H
-  drawSmBit(56, 12 + yy3, sd, 3, 8, color5);
+  drawSmBit(56, 13 + yy3, sd, 3, 8, color5);
 
-  // dma_display->print(china_year);
-  //dma_display->print(china_month);
-  //dma_display->print(china_day);
-
+  if(sec_ten%2==0){
+  //显示老虎
+  drawColorBit(64, 0, laohugif[gif_i], 64, 64);
+ if(soundon){
+    drawBit(65, 52, laba, 12, 12, TFT_GREEN);
+  }else{
+    drawBit(65, 52, laba, 12, 12, TFT_DARKGREY);
+  }
+  //显示wifi图标
+    drawBit(116, 52, wifi, 12, 12, TFT_GREEN);
+  //显示光点
+  if (sec % 2 == 0 && isGeneralStar) {
+    for (int i = 0; i < starnum; i++) {
+      star_x[i] = 64 + rand() % 63;
+      star_y[i] = rand() % 63;
+      star_color[i] = rand() % 0xffff;
+    }
+    isGeneralStar = !isGeneralStar;
+  }
+  if (sec % 2 != 0 && isGeneralStar == false) {
+    isGeneralStar = true;
+  }
+  for (int i = 0; i < starnum; i++) {
+    //dma_display->drawPixel(star_x[i], star_y[i], star_color[i]);
+    fillTab(star_x[i], star_y[i], star_color[i]);
+    fillTab(star_x[i] + 1, star_y[i], star_color[i]);
+    fillTab(star_x[i] - 1, star_y[i], star_color[i]);
+    //  fillTab(star_x[i]+2,star_y[i],star_color[i]);
+    //  fillTab(star_x[i]-2,star_y[i],star_color[i]);
+    fillTab(star_x[i], star_y[i] + 1, star_color[i]);
+    fillTab(star_x[i], star_y[i] - 1, star_color[i]);
+    //  fillTab(star_x[i],star_y[i]+2,star_color[i]);
+    //  fillTab(star_x[i],star_y[i]-2,star_color[i]);
+  }
+  
+  if (gif_i < 8) {
+    gif_i++;
+  } else {
+    gif_i = 0;
+  }
+  }else{
+     show3dayWeather();
+  }
 
 }
