@@ -9,7 +9,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 53; yy2 = -14; yy3 = -14;
       return "一";
-      break;
     case 2:
       color = 0xfb20; //时间
       color2 = TFT_ORANGE; //日期
@@ -18,7 +17,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 2; yy2 = 0; yy3 = 0;
       return "二";
-      break;
     case 3:
       color = 0xffec; //时间
       color2 = TFT_ORANGE; //日期
@@ -27,7 +25,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 52; yy2 = -42; yy3 = 8;
       return "三";
-      break;
     case 4:
       color = 0x7e0; //时间
       color2 = TFT_ORANGE; //日期
@@ -36,7 +33,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 52; yy2 = -14; yy3 = -14;
       return "四";
-      break;
     case 5:
       color = 0x7ec; //时间
       color2 = TFT_ORANGE; //日期
@@ -45,7 +41,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 2; yy2 = 0; yy3 = 0;
       return "五";
-      break;
     case 6:
       color = TFT_SKYBLUE; //时间
       color2 = TFT_ORANGE; //日期
@@ -54,7 +49,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 52; yy2 = -42; yy3 = 8;
       return "六";
-      break;
     case 15:
       color = 0xf81f; //时间
       color2 = TFT_ORANGE; //日期
@@ -63,7 +57,6 @@ char * showWeek(int v_week) { //显示日期
       color5 = TFT_ORANGE;
       yy1 = 52; yy2 = -14; yy3 = -14;
       return "日";
-      break;
   }
 }
 void nightMode() {
@@ -76,10 +69,6 @@ void nightMode() {
 }
 void refreshData(void * parameter) {
   //每天0点更新网络时间
-  while (!WiFi.status() == WL_CONNECTED) {
-    connectToWiFi(15);   //apConfig();
-  }
-
   if ( minu == 0 && sec == 0) {
     setSyncProvider(getNtpTime);
     GetTime();
@@ -98,12 +87,9 @@ void housound(void * parameter) {
   vTaskDelete(NULL);
 }
 void refreshTQ(void * parameter) {
-  if (WiFi.status() == WL_CONNECTED) {
-    getNongli( year_, month_, day_);
     getWeather();
-  } else {
-    autoConfig();
-  }
+    get3DayWeather();
+    getBirth();
   vTaskDelete(NULL);
 }
 void showJieri(void * parameter) {
@@ -250,10 +236,11 @@ void showTime() {
   disSmallNumbers(humidity + hum_mod, 52, 16 + yy3, color5);
   //显示H
   drawSmBit(56, 13 + yy3, sd, 3, 8, color5);
-
-  if(sec_ten%2==0){
+}
+void showTigger() { 
+  if(sec_ten%2==0 && !isnight){
   //显示老虎
-  drawColorBit(64, 0, laohugif[gif_i], 64, 64);
+  showlaohu();
  if(soundon){
     drawBit(65, 52, laba, 12, 12, TFT_GREEN);
   }else{
@@ -286,13 +273,8 @@ void showTime() {
     //  fillTab(star_x[i],star_y[i]-2,star_color[i]);
   }
   
-  if (gif_i < 8) {
-    gif_i++;
-  } else {
-    gif_i = 0;
-  }
   }else{
+    if(gif_i>17){gif_i=0;}
      show3dayWeather();
   }
-
 }

@@ -1,0 +1,90 @@
+<script src='https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js'></script>
+<script type='text/javascript'>function change(){var value =document.getElementById('temp').value;console.log(value);document.getElementById('value').innerHTML = value;};</script>
+<script type='text/javascript'>function change2(){var value =document.getElementById('hum').value;console.log(value);document.getElementById('value2').innerHTML = value;};</script>
+<script type='text/javascript'>function submit2() {      $.ajax({ type: 'GET', url: '/get', data: {reboot:1 }, dataType: 'html', success: function(result) {   alert('已重启！');}     });   }; </script>
+<script type='text/javascript'>function submit() {     
+  $.ajax({ type: 'GET', url: '/get', data: { temp: $('#temp').val(), hum: $('#hum').val() ,gundong:$('#gundong').val() ,light: $('#light').val(),hour:$('#hour').val(),reverse: $('#reverse').val(),chengshi:$('#chengshi').val(),tianqikey:$('#tianqikey').val()},
+  dataType: 'html',
+  success: function(result)
+  {   alert('更新成功!')} }); };  </script>
+<table border =1>
+	<tr><td colspan=3><center><h2>DaClock时钟配置</h2></center></td><tr/>
+<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
+		<tr border=1><td>固件更新：</td>
+			<td>
+   <input type='file' name='update'>
+        <input type='submit' value='Update'>
+         <div id='prg'>progress: 0%</div>
+    </td>
+    </tr>
+    </form>
+    <tr>
+<td>WIFI设置：</td>
+<td>SSID:<input type='text' name='update'><br/>PASS:<input type='text' name='update'><br/><input type='submit' value='Update'></td>
+ </tr>
+ <tr>
+ 	<td>彩色时间：</td>
+ 	<td><select id='reverse'><option   value='false' selected>启用</option><option value='true'>停止</option></select></td>
+ 	</tr>
+ 	<tr>
+ 		<td>自定义颜色：</td>
+ 		<td>
+ 		 					时间:<input type='text' name='update'><br/>日期颜色:<input type='text' name='update'><br/>温湿度颜色:<input type='text' name='update'>
+ 					<br/><input type='submit' value='Update'></td>
+ 		</tr>
+ 		<tr>
+ 			<td>时间显示：</td>
+ 			<td><select id='reverse'><option   value='false' selected>24H</option><option value='true'>12H</option></select></td>
+ 			</tr>
+ 			<tr>
+ 				<td>添加纪念日：</td>
+ 				<td><form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
+ 					标题:<input type='text' name='update'>日期:<input type='text' name='update'>
+ 					<input type='submit' value='Update'></td>
+ 				</tr>
+ 			<tr>
+ 				<td>是否自动亮度：</td>
+ 				 	<td><select id='reverse'><option   value='false' selected>是</option><option value='true'>否</option></select></td>
+ 				</tr>
+ 				 <tr>
+ 				<td>温度修正：</td>
+ 				<td><input id='temp' type='range' min='-10' max='10' value='-4'   oninput='change()'/><span id='value'>-4</span></td>
+ 				</tr>
+ 				<tr>
+ 				<td>湿度修正：</td>
+ 				<td><input id='hum' type='range' min='-10' max='10' value='0' oninput='change2()'/><span   id='value2'>0</span></td>
+ 				</tr>
+ 				<tr><td>城市：</td><td><input id='chengshi' type='text' value='beijing'/></td></tr>
+<tr><td>天气key:</td><td><input id='tianqikey' type='text' value=''>时钟采用和风天气</td></tr>
+<tr><td colspan=2 align=center><input type='submit' value='重启时钟'/ onclick='submit2()'></input></td></tr>
+<tr><td  colspan=2 align=center><input type='submit' value='保存设置' onclick='submit()'></td>
+ </table>
+ <script>
+  $('form').submit(function(e){
+  e.preventDefault();
+  var form = $('#upload_form')[0];
+  var data = new FormData(form);
+   $.ajax({
+  url: '/update',
+  type: 'POST',
+  data: data,
+  contentType: false,
+  processData:false,
+  xhr: function() {
+  var xhr = new window.XMLHttpRequest();
+  xhr.upload.addEventListener('progress', function(evt) {
+  if (evt.lengthComputable) {
+  var per = evt.loaded / evt.total;
+  $('#prg').html('progress: ' + Math.round(per*100) + '%');
+  }
+  }, false);
+  return xhr;
+  },
+  success:function(d, s) {
+  console.log('success!') 
+ },
+ error: function (a, b, c) {
+ }
+ });
+ });
+ </script>

@@ -67,9 +67,10 @@ void getWeather() {
   else {
     Serial.print("Error code: ");
     Serial.println(httpResponseCode);
-      wea_code = 151;
-      wea_hm = 0;
+      wea_code = 999;
+      wea_hm = httpResponseCode;
       strcpy(wea_temp1,"-1");
+      
   }
   // Free resources
   http.end();
@@ -180,8 +181,7 @@ void get3DayWeather() {
     else {
       Serial.print("Error code: ");
       Serial.println(httpResponseCode);
-      wea_code = 151;
-      wea_hm = 0;
+      wea_code = 999;
       // wea_temp1="0";
 
     }

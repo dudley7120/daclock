@@ -30,13 +30,18 @@ void fillScreenTab() {
 //  for (int i = 0; i < 64; i++) {
 //    ledtab[64][0 + i] = TFT_LIGHTGREY; //分隔线
 //  }
-  if (minu % 2 == 0 && !isnight && twopannel) {
+  if(twopannel){
+  if (minu % 2 == 0 && !isnight) {
     screen_num = 0;
-  } else if(!isnight&&twopannel){
+  } else if(!isnight){
     screen_num = 64;
+  }
+  }else{
+    screen_num = 0;
   }
   for (int i = 0; i < 128; i++) {
     for (int j = 0; j < 64; j++) {
+      if(twopannel){
       if (i < 64) {
 
         dma_display->drawPixel(i + screen_num, j, ledtab[i][j]);
@@ -45,6 +50,9 @@ void fillScreenTab() {
 
         dma_display->drawPixel(i - screen_num, j, ledtab[i][j]);
 
+      }
+      }else{
+        dma_display->drawPixel(i + screen_num, j, ledtab[i][j]);
       }
     }
   }
